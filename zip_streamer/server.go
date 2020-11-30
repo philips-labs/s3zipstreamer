@@ -15,8 +15,7 @@ import (
 )
 
 type zipEntry struct {
-	Source  string
-	Url     string
+	S3Path  string
 	ZipPath string
 }
 
@@ -33,7 +32,7 @@ func UnmarshalPayload(payload []byte) ([]*FileEntry, error) {
 
 	results := make([]*FileEntry, 0)
 	for _, entry := range parsed.Entries {
-		fileEntry, err := NewFileEntry(entry.Url, entry.ZipPath)
+		fileEntry, err := NewFileEntry(entry.S3Path, entry.ZipPath)
 		if err == nil {
 			results = append(results, fileEntry)
 		}
