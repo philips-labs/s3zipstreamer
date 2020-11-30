@@ -2,7 +2,7 @@
 
 ZipStreamer is a golang project for building and streaming zip files from a series of S3 objects. For example, if you have 200 files on S3, and you want to download a zip file of them, you can do so in 1 request to this server.
 
-It was forked from [https://github.com/scosman/zipstreamer](https://github.com/scosman/zipstreamer) and modified to work on Cloud foundry and to work to read from the S3 service bound to the app only.
+It was forked from [https://github.com/scosman/zipstreamer](https://github.com/scosman/zipstreamer) and modified to work on Cloud foundry and to read from bound S3 service only.
 
 Highlights include:
 
