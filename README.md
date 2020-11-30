@@ -1,9 +1,8 @@
-
-[![Build Status](https://travis-ci.com/scosman/zipstreamer.svg?branch=master)](https://travis-ci.com/scosman/zipstreamer)
-
 ## About
 
-ZipStreamer is a golang project for building and streaming zip files from a series of web links. For example, if you have 200 files on S3, and you want to download a zip file of them, you can do so in 1 request to this server.
+ZipStreamer is a golang project for building and streaming zip files from a series of S3 objects. For example, if you have 200 files on S3, and you want to download a zip file of them, you can do so in 1 request to this server.
+
+It was forked from [https://github.com/scosman/zipstreamer](https://github.com/scosman/zipstreamer) and modified to work on Cloud foundry and to work to read from the S3 service bound to the app only.
 
 Highlights include:
 
@@ -11,12 +10,6 @@ Highlights include:
  - Low CPU: the default server doesn't compress files, only packages them into a zip, so there's minimal CPU load (configurable)
  - High concurrency: the two properties above allow a single small server to stream hundreds of large zips simultaneous
  - It includes a HTTP server, but can be used as a library (see zip_streamer.go).
-
-## Deploy
-
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
-
-Be sure to enable [session afinity](https://devcenter.heroku.com/articles/session-affinity) if you're using multiple servers and `/create_download_link`.
 
 ## HTTP Endpoints
 
@@ -31,8 +24,8 @@ Example body:
 ```
 {
   "entries": [
-    {"Url":"https://server.com/image1.jpg","ZipPath":"image1.jpg"},
-    {"Url":"https://server.com/image2.jpg","ZipPath":"in-a-sub-folder/image2.jpg"}
+    {"S3Path":"image1.jpg","ZipPath":"image1.jpg"},
+    {"S3Path":"image2.jpg","ZipPath":"in-a-sub-folder/image2.jpg"}
   ]
 }
 ```
@@ -43,7 +36,7 @@ This endpoint creates a temporary link which can be used to download a zip via a
 
 *Important*:
 
- - This stores the link in an in memory cache, so it's not suitable for deploying to a cluster. However if using heroku and requests are coming from a browser, you can use a cluster if you enable [session afinity](https://devcenter.heroku.com/articles/session-affinity) which ensures requests from a given client are routed to the same server.
+ - This stores the link in an in memory cache, so it's not suitable for deploying to a cluster.
  - These links are only live for 60 seconds. They are expected to be used immediately and are not long living.
 
 It expects the same body format as `/download`.
@@ -60,15 +53,3 @@ Here is an example response body:
 **GET /download_link/{link_id}**
 
 Call this endpoint with a `link_id` generated with `/create_download_link` to download that zip file.
-
-## Config
-
-These ENV vars can be used to config the server:
-
- - `PORT` - which port the HTTP server binds to. If not set defaults to 4008
- - `ZS_URL_PREFIX` - if set, requires that the URL of files downloaded start with this prefix. Useful to preventing others from using your server to serve their files.
-
-## Why
-
-I was mentoring at a "Teens Learning Code" class, but we had too many mentors, so I had some downtime.
-
