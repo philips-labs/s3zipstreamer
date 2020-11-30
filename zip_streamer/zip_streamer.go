@@ -2,10 +2,16 @@ package zip_streamer
 
 import (
 	"archive/zip"
+	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/minio/minio-go/v7"
+
+	"github.com/philips-software/gautocloud-connectors/hsdp"
 )
 
 type ZipStream struct {
@@ -29,18 +35,15 @@ func NewZipStream(entries []*FileEntry, w io.Writer) (*ZipStream, error) {
 	return &z, nil
 }
 
-func (z *ZipStream) StreamAllFiles() error {
+func (z *ZipStream) StreamAllFiles(svc *hsdp.S3MinioClient) error {
 	zipWriter := zip.NewWriter(z.destination)
 	success := 0
 
 	for _, entry := range z.entries {
-		resp, err := http.Get(entry.Url().String())
+		object, err := svc.GetObject(context.Background(), svc.Bucket, entry.s3Path, minio.GetObjectOptions{})
 		if err != nil {
-			continue
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			continue
+			fmt.Println(err)
+			return err
 		}
 
 		header := &zip.FileHeader{
@@ -50,12 +53,14 @@ func (z *ZipStream) StreamAllFiles() error {
 		}
 		entryWriter, err := zipWriter.CreateHeader(header)
 		if err != nil {
+			object.Close()
 			return err
 		}
 
 		// TODO: flush after every 32kb instead of every file to reduce memory
-		_, err = io.Copy(entryWriter, resp.Body)
+		_, err = io.Copy(entryWriter, object)
 		if err != nil {
+			object.Close()
 			return err
 		}
 
@@ -64,7 +69,6 @@ func (z *ZipStream) StreamAllFiles() error {
 		if ok {
 			flushingWriter.Flush()
 		}
-
 		success++
 	}
 

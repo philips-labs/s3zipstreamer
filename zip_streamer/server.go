@@ -2,15 +2,20 @@ package zip_streamer
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/cloudfoundry-community/gautocloud"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/philips-software/gautocloud-connectors/hsdp"
 )
 
 type zipEntry struct {
+	Source  string
 	Url     string
 	ZipPath string
 }
@@ -40,9 +45,10 @@ func UnmarshalPayload(payload []byte) ([]*FileEntry, error) {
 type Server struct {
 	router    *mux.Router
 	linkCache LinkCache
+	svc       *hsdp.S3MinioClient
 }
 
-func NewServer() *Server {
+func NewServer() (*Server, error) {
 	r := mux.NewRouter()
 
 	timeout := time.Second * 60
@@ -50,12 +56,16 @@ func NewServer() *Server {
 		router:    r,
 		linkCache: NewLinkCache(&timeout),
 	}
+	err := gautocloud.Inject(&server.svc)
+	if err != nil {
+		return nil, err
+	}
 
 	r.HandleFunc("/download", server.HandlePostDownload).Methods("POST")
 	r.HandleFunc("/create_download_link", server.HandleCreateLink).Methods("POST")
 	r.HandleFunc("/download_link/{link_id}", server.HandleDownloadLink).Methods("GET")
 
-	return &server
+	return &server, nil
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -128,7 +138,7 @@ func (s *Server) streamEntries(fileEntries []*FileEntry, w http.ResponseWriter, 
 	w.Header().Set("Content-Type", "application/zip")
 	w.Header().Set("Content-Disposition", "attachment; filename=\"archive.zip\"")
 	w.WriteHeader(http.StatusOK)
-	err = zipStreamer.StreamAllFiles()
+	err = zipStreamer.StreamAllFiles(s.svc)
 
 	if err != nil {
 		// Close the connection so the client gets an error instead of 200 but invalid file

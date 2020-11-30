@@ -2,17 +2,22 @@ package main
 
 import (
 	"context"
-	zip_streamer "github.com/scosman/zipstreamer/zip_streamer"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/philips-forks/zip_streamer/zip_streamer"
 )
 
 func main() {
-	zipServer := zip_streamer.NewServer()
+	zipServer, err := zip_streamer.NewServer()
+	if err != nil {
+		log.Print("No S3 service found, shutting down...")
+		return
+	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
