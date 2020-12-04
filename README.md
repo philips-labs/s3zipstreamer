@@ -9,7 +9,9 @@ Highlights include:
  - Low memory: the files are streamed out to the client immediately
  - Low CPU: the default server doesn't compress files, only packages them into a zip, so there's minimal CPU load (configurable)
  - High concurrency: the two properties above allow a single small server to stream hundreds of large zips simultaneous
- - It includes a HTTP server, but can be used as a library (see zip_streamer.go).
+ - Support to protect `/download` and `/create_download_link` with credentials
+ - Support for HSDP S3 Credentials
+
 
 ## HTTP Endpoints
 
@@ -23,10 +25,18 @@ Example body:
 
 ```
 {
+  "filename": "archive.zip",
   "entries": [
     {"S3Path":"image1.jpg","ZipPath":"image1.jpg"},
     {"S3Path":"image2.jpg","ZipPath":"in-a-sub-folder/image2.jpg"}
-  ]
+  ],
+  "s3Creds": {
+    "accessKey": "foo",
+    "secretKey": "bar",
+    "sessionToken": "token",
+    "bucket": "my-s3-bucket",
+    "endpoint": "https://s3.endpoint"
+  }
 }
 ```
 

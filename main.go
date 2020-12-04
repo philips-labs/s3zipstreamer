@@ -13,9 +13,12 @@ import (
 )
 
 func main() {
-	zipServer, err := zip_streamer.NewServer()
+	zipServer, err := zip_streamer.NewServer(zip_streamer.Config{
+		Username: os.Getenv("USERNAME"),
+		Password: os.Getenv("PASSWORD"),
+	})
 	if err != nil {
-		log.Print("No S3 service found, shutting down...")
+		log.Printf("Error: %v\n", err)
 		return
 	}
 

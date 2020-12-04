@@ -17,17 +17,24 @@ func NewLinkCache(timeout *time.Duration) LinkCache {
 	}
 }
 
-func (c *LinkCache) Get(linkKey string) (entries []*FileEntry) {
+type cacheEntry struct {
+	Filename string
+	S3Creds  s3Creds
+	Entries  []*FileEntry
+}
+
+func (c *LinkCache) Get(linkKey string) *cacheEntry {
 	result, ok := c.cache.Load(linkKey)
 	if ok {
-		return result.([]*FileEntry)
+		var entry = result.(cacheEntry)
+		return &entry
 	} else {
 		return nil
 	}
 }
 
-func (c *LinkCache) Set(linkKey string, entries []*FileEntry) {
-	c.cache.Store(linkKey, entries)
+func (c *LinkCache) Set(linkKey string, entry cacheEntry) {
+	c.cache.Store(linkKey, entry)
 
 	if c.timeout != nil {
 		go func() {

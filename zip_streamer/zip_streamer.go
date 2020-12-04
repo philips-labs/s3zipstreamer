@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/minio/minio-go/v7"
-
-	"github.com/philips-software/gautocloud-connectors/hsdp"
 )
 
 type ZipStream struct {
@@ -35,12 +33,12 @@ func NewZipStream(entries []*FileEntry, w io.Writer) (*ZipStream, error) {
 	return &z, nil
 }
 
-func (z *ZipStream) StreamAllFiles(svc *hsdp.S3MinioClient) error {
+func (z *ZipStream) StreamAllFiles(svc *minio.Client, bucket string) error {
 	zipWriter := zip.NewWriter(z.destination)
 	success := 0
 
 	for _, entry := range z.entries {
-		object, err := svc.GetObject(context.Background(), svc.Bucket, entry.s3Path, minio.GetObjectOptions{})
+		object, err := svc.GetObject(context.Background(), bucket, entry.s3Path, minio.GetObjectOptions{})
 		if err != nil {
 			fmt.Println(err)
 			return err
