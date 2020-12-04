@@ -79,7 +79,7 @@ func basicAuthWrapper(config Config, originalHandler http.HandlerFunc) http.Hand
 	return func(w http.ResponseWriter, r *http.Request) {
 		if username, password, ok := r.BasicAuth(); !ok ||
 			!(username == config.Username && password == config.Password) {
-			w.Header().Set("WWW-Authenticate", `Basic realm="s3streamzipper"`)
+			w.Header().Set("WWW-Authenticate", `Basic realm="s3zipstreamer"`)
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte("Unauthorized\n"))
 			return
