@@ -2,6 +2,7 @@ package zip_streamer
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -186,8 +187,10 @@ func (s *Server) streamEntries(entry *cacheEntry, w http.ResponseWriter, req *ht
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+entry.Filename+"\"")
 	w.WriteHeader(http.StatusOK)
 	if s.directClient != nil {
+		fmt.Printf("using direct client for streaming...\n")
 		err = zipStreamer.StreamAllFiles(s.directClient.Client, s.directClient.Bucket)
 	} else { // S3Creds based
+		fmt.Printf("using direct S3Creds client for streaming...\n")
 		s3creds := entry.S3Creds
 		s3credsClient, err := minio.New(s3creds.Endpoint, &minio.Options{
 			Creds: credentials.NewStaticV4(s3creds.AccessKey, s3creds.SecretKey, s3creds.SessionToken),
@@ -201,6 +204,7 @@ func (s *Server) streamEntries(entry *cacheEntry, w http.ResponseWriter, req *ht
 
 	if err != nil {
 		// Close the connection so the client gets an error instead of 200 but invalid file
+		fmt.Printf("error streaming: %v\n", err)
 		closeForError(w)
 	}
 }
