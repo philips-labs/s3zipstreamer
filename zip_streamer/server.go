@@ -193,7 +193,8 @@ func (s *Server) streamEntries(entry *cacheEntry, w http.ResponseWriter, req *ht
 		fmt.Printf("using S3Creds client for streaming...\n")
 		s3creds := entry.S3Creds
 		s3credsClient, err := minio.New(s3creds.Endpoint, &minio.Options{
-			Creds: credentials.NewStaticV4(s3creds.AccessKey, s3creds.SecretKey, s3creds.SessionToken),
+			Creds:  credentials.NewStaticV4(s3creds.AccessKey, s3creds.SecretKey, s3creds.SessionToken),
+			Secure: true,
 		})
 		if err != nil {
 			fmt.Printf("error streaming: %v\n", err)

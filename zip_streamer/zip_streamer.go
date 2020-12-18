@@ -40,10 +40,10 @@ func (z *ZipStream) StreamAllFiles(svc *minio.Client, bucket string) error {
 	for _, entry := range z.entries {
 		object, err := svc.GetObject(context.Background(), bucket, entry.s3Path, minio.GetObjectOptions{})
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("error streaming %s: %v\n", entry.s3Path, err)
 			return err
 		}
-
+		fmt.Printf("streaming: %s\n", entry.s3Path)
 		header := &zip.FileHeader{
 			Name:     entry.ZipPath(),
 			Method:   z.CompressionMethod,
@@ -52,6 +52,7 @@ func (z *ZipStream) StreamAllFiles(svc *minio.Client, bucket string) error {
 		entryWriter, err := zipWriter.CreateHeader(header)
 		if err != nil {
 			object.Close()
+			fmt.Printf("error while streaming %s: %v\n", entry.s3Path, err)
 			return err
 		}
 
@@ -59,6 +60,7 @@ func (z *ZipStream) StreamAllFiles(svc *minio.Client, bucket string) error {
 		_, err = io.Copy(entryWriter, object)
 		if err != nil {
 			object.Close()
+			fmt.Printf("error copying %s: %v\n", entry.s3Path, err)
 			return err
 		}
 
