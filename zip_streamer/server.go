@@ -190,12 +190,13 @@ func (s *Server) streamEntries(entry *cacheEntry, w http.ResponseWriter, req *ht
 		fmt.Printf("using direct client for streaming...\n")
 		err = zipStreamer.StreamAllFiles(s.directClient.Client, s.directClient.Bucket)
 	} else { // S3Creds based
-		fmt.Printf("using direct S3Creds client for streaming...\n")
+		fmt.Printf("using S3Creds client for streaming...\n")
 		s3creds := entry.S3Creds
 		s3credsClient, err := minio.New(s3creds.Endpoint, &minio.Options{
 			Creds: credentials.NewStaticV4(s3creds.AccessKey, s3creds.SecretKey, s3creds.SessionToken),
 		})
 		if err != nil {
+			fmt.Printf("error streaming: %v\n", err)
 			closeForError(w)
 			return
 		}
