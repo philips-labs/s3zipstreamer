@@ -35,7 +35,7 @@ Example body:
     "secretKey": "bar",
     "sessionToken": "token",
     "bucket": "my-s3-bucket",
-    "endpoint": "https://s3.endpoint"
+    "endpoint": "s3.endpoint.without.schema.com"
   }
 }
 ```
