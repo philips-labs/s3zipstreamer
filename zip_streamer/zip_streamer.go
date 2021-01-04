@@ -37,7 +37,15 @@ func (z *ZipStream) StreamAllFiles(svc *minio.Client, bucket string) error {
 	zipWriter := zip.NewWriter(z.destination)
 	success := 0
 
+	fmt.Printf("Streaming all files...\n")
 	for _, entry := range z.entries {
+		fmt.Printf("Fetching stats: %s\n", entry.s3Path)
+		stats, err := svc.StatObject(context.Background(), bucket, entry.s3Path, minio.StatObjectOptions{})
+		if err != nil {
+			fmt.Printf("error stating %s: %v\n", entry.s3Path, err)
+			return err
+		}
+		fmt.Printf("stat: %v\n", stats)
 		object, err := svc.GetObject(context.Background(), bucket, entry.s3Path, minio.GetObjectOptions{})
 		if err != nil {
 			fmt.Printf("error streaming %s: %v\n", entry.s3Path, err)
@@ -63,12 +71,12 @@ func (z *ZipStream) StreamAllFiles(svc *minio.Client, bucket string) error {
 			fmt.Printf("error copying %s: %v\n", entry.s3Path, err)
 			return err
 		}
-
 		zipWriter.Flush()
 		flushingWriter, ok := z.destination.(http.Flusher)
 		if ok {
 			flushingWriter.Flush()
 		}
+		object.Close()
 		success++
 	}
 
