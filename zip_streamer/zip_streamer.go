@@ -38,7 +38,7 @@ func (z *ZipStream) StreamAllFiles(svc *minio.Client, bucket string) error {
 	success := 0
 
 	fmt.Printf("Streaming all files...\n")
-	buf := make([]byte, 1024*1024)
+	buf := make([]byte, 4096)
 
 	for _, entry := range z.entries {
 		object, err := svc.GetObject(context.Background(), bucket, entry.s3Path, minio.GetObjectOptions{})
