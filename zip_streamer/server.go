@@ -165,7 +165,7 @@ func (s *Server) HandlePostDownload(w http.ResponseWriter, req *http.Request) {
 func (s *Server) HandleDownloadLink(w http.ResponseWriter, req *http.Request) {
 	linkId := mux.Vars(req)["link_id"]
 	cacheEntry := s.linkCache.Get(linkId)
-	if cacheEntry.Entries == nil {
+	if cacheEntry == nil || cacheEntry.Entries == nil {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"status":"error","error":"link not found"}`))
 		return
