@@ -38,14 +38,9 @@ func (z *ZipStream) StreamAllFiles(svc *minio.Client, bucket string) error {
 	success := 0
 
 	fmt.Printf("Streaming all files...\n")
+	buf := make([]byte, 1024*1024)
+
 	for _, entry := range z.entries {
-		fmt.Printf("Fetching stats: %s\n", entry.s3Path)
-		stats, err := svc.StatObject(context.Background(), bucket, entry.s3Path, minio.StatObjectOptions{})
-		if err != nil {
-			fmt.Printf("error stating %s: %v\n", entry.s3Path, err)
-			return err
-		}
-		fmt.Printf("stat: %v\n", stats)
 		object, err := svc.GetObject(context.Background(), bucket, entry.s3Path, minio.GetObjectOptions{})
 		if err != nil {
 			fmt.Printf("error streaming %s: %v\n", entry.s3Path, err)
@@ -65,7 +60,7 @@ func (z *ZipStream) StreamAllFiles(svc *minio.Client, bucket string) error {
 		}
 
 		// TODO: flush after every 32kb instead of every file to reduce memory
-		_, err = io.Copy(entryWriter, object)
+		_, err = io.CopyBuffer(entryWriter, object, buf)
 		if err != nil {
 			object.Close()
 			fmt.Printf("error copying %s: %v\n", entry.s3Path, err)
