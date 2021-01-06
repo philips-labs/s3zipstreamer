@@ -60,10 +60,10 @@ func (z *ZipStream) StreamAllFiles(svc *minio.Client, bucket string) error {
 		}
 
 		// TODO: flush after every 32kb instead of every file to reduce memory
-		_, err = io.CopyBuffer(entryWriter, object, buf)
+		written, err := io.CopyBuffer(entryWriter, object, buf)
 		if err != nil {
 			object.Close()
-			fmt.Printf("error copying %s: %v\n", entry.s3Path, err)
+			fmt.Printf("error copying %s (wrote %d bytes): %v\n", entry.s3Path, written, err)
 			return err
 		}
 		zipWriter.Flush()
